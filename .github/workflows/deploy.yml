@@ -39,6 +39,13 @@ jobs:
 
       - name: Build React application
         run: npm run build
+        # GitHub secrets/variables must be passed to the build explicitly.
+        # Vite inlines any VITE_* var into the client bundle at build time.
+        # The `||` makes this work whether they live in the "Secrets" tab
+        # or the "Variables" tab (Settings -> Secrets and variables -> Actions).
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY || vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
 
       - name: Upload build artifacts
         uses: actions/upload-pages-artifact@v4
