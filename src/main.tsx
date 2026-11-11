@@ -13,7 +13,8 @@ if (!container) throw new Error('Root element #root was not found in index.html.
 
 createRoot(container).render(
   <StrictMode>
-    <BrowserRouter>
+    {/* BASE_URL mirrors vite.config.ts `base` so routes match on GitHub Pages. */}
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       {/* "user" lets people who prefer reduced motion skip big movements. */}
       <MotionConfig reducedMotion="user">
         <ToastProvider>
