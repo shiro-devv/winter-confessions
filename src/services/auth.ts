@@ -150,7 +150,7 @@ export async function signUp({
     password,
     options: {
       data: { username: normalizedUsername, display_name: cleanDisplayName },
-      emailRedirectTo: `${window.location.origin}/auth?mode=login`,
+      emailRedirectTo: `${window.location.origin}${import.meta.env.BASE_URL}auth?mode=login`,
     },
   });
 

@@ -1,6 +1,8 @@
 /** The public link where anyone can send a confession to this username. */
 export function profileUrl(username: string): string {
-  return `${window.location.origin}/u/${username}`;
+  // BASE_URL is '/winter-confessions/' in production and '/' in dev, so the
+  // link stays correct when the app is served from a subpath on GitHub Pages.
+  return `${window.location.origin}${import.meta.env.BASE_URL}u/${username}`;
 }
 
 /** Copies text to the clipboard. Resolves to false if the browser refuses. */

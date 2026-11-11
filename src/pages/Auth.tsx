@@ -79,7 +79,8 @@ export default function Auth() {
   };
 
   const cleaned = normalizeUsername(username);
-  const host = window.location.host;
+  // Include the base path so the shown link is correct on GitHub Pages.
+  const linkPrefix = `${window.location.host}${import.meta.env.BASE_URL}u/`;
 
   return (
     <PageTransition className="auth-page">
@@ -148,7 +149,8 @@ export default function Auth() {
                   />
                 </div>
                 <p id="username-hint" className="hint">
-                  Your link: {host}/u/<strong>{cleaned || 'yourname'}</strong>
+                  Your link: {linkPrefix}
+                  <strong>{cleaned || 'yourname'}</strong>
                 </p>
               </div>
             )}
