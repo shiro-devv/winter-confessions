@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Button } from '../components/Button';
 import { ConfessionCard } from '../components/ConfessionCard';
+import { LinkQrDialog } from '../components/LinkQrDialog';
 import { PageTransition } from '../components/PageTransition';
 import { messageFromError } from '../db/errors';
 import { useAuth } from '../hooks/auth';
@@ -49,6 +50,7 @@ export default function Inbox() {
   const [bio, setBio] = useState('');
   const [profileError, setProfileError] = useState<string | null>(null);
   const [savingProfile, setSavingProfile] = useState(false);
+  const [qrOpen, setQrOpen] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -218,6 +220,7 @@ export default function Inbox() {
                   <ConfessionCard
                     key={confession.id}
                     confession={confession}
+                    ownerUsername={user.username}
                     onChanged={() => {
                       void load();
                     }}
@@ -243,6 +246,9 @@ export default function Inbox() {
               </Button>
               <Button variant="ghost-light" onClick={handleShare}>
                 Share
+              </Button>
+              <Button variant="ghost-light" onClick={() => setQrOpen(true)}>
+                QR code
               </Button>
             </div>
             <p className="side-small">
@@ -291,6 +297,8 @@ export default function Inbox() {
           </motion.form>
         </aside>
       </div>
+
+      <LinkQrDialog open={qrOpen} onClose={() => setQrOpen(false)} username={user.username} url={link} />
     </PageTransition>
   );
 }

@@ -1282,7 +1282,8 @@ textarea {
   right: 16px;
   bottom: 16px;
   left: 16px;
-  z-index: 300;
+  /* Above the modal overlay (400) so its toasts stay visible. */
+  z-index: 500;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1318,6 +1319,92 @@ textarea {
 }
 .toast-error .toast-icon {
   background: #f5a59c;
+}
+
+/* ---------- Share: QR codes and story cards ---------- */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(15, 27, 61, 0.55);
+  backdrop-filter: blur(4px);
+}
+.modal-panel {
+  width: min(440px, 100%);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  padding: 26px;
+  background: var(--primary-lighter);
+  border: 2px solid var(--ink);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+}
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+.modal-head h2 {
+  margin: 0;
+  font-size: 1.35rem;
+}
+.modal-close {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--ink);
+  background: var(--primary);
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  cursor: pointer;
+}
+.modal-close:hover {
+  background: var(--primary-light);
+}
+
+.qr-card {
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  text-align: center;
+}
+.qr-canvas {
+  padding: 14px;
+  background: var(--white);
+  border: 2px solid var(--ink);
+  border-radius: 18px;
+}
+.qr-url {
+  margin: 0;
+  font-weight: 500;
+  word-break: break-all;
+  color: var(--ink-soft);
+}
+.qr-actions {
+  justify-content: center;
+}
+
+.answered-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.link-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  text-decoration: none;
 }
 
 /* ---------- Responsive ---------- */

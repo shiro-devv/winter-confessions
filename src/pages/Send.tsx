@@ -11,7 +11,8 @@ import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { useToast } from '../hooks/toast';
 import { copyText, profileUrl } from '../lib/share';
 import { triggerSnowBurst } from '../lib/snow';
-import { formatRelative } from '../lib/time';
+import { downloadStoryCard } from '../lib/storyCard';
+import { formatDate, formatRelative } from '../lib/time';
 import { findUserByUsername, type Profile } from '../services/auth';
 import {
   listPrompts,
@@ -47,6 +48,7 @@ export default function Send() {
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [savingCard, setSavingCard] = useState<string | null>(null);
 
   useDocumentTitle(
     profile === undefined
@@ -129,6 +131,26 @@ export default function Send() {
       setError(messageFromError(caught));
     } finally {
       setPending(false);
+    }
+  };
+
+  const handleSaveCard = async (confession: Confession) => {
+    if (!profile || savingCard) return;
+    setSavingCard(confession.id);
+    try {
+      await downloadStoryCard({
+        username: profile.username,
+        url: profileUrl(profile.username),
+        body: confession.body,
+        promptText: confession.promptText,
+        answer: confession.answer,
+        dateLabel: formatDate(confession.answeredAt ?? confession.createdAt),
+      });
+      toast.show('Story card saved. Share it anywhere.', 'success');
+    } catch (caught) {
+      toast.show(messageFromError(caught), 'error');
+    } finally {
+      setSavingCard(null);
     }
   };
 
@@ -335,7 +357,17 @@ export default function Send() {
                     <p className="answered-a">{confession.answer}</p>
                     <div className="answered-foot">
                       <span className="muted">{formatRelative(confession.answeredAt ?? confession.createdAt)}</span>
-                      <ReactionBar confessionId={confession.id} />
+                      <div className="answered-actions">
+                        <ReactionBar confessionId={confession.id} />
+                        <button
+                          type="button"
+                          className="link-btn"
+                          onClick={() => void handleSaveCard(confession)}
+                          disabled={savingCard !== null}
+                        >
+                          {savingCard === confession.id ? 'Saving...' : 'Save as story'}
+                        </button>
+                      </div>
                     </div>
                   </motion.li>
                 ))}

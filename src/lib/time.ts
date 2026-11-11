@@ -11,3 +11,8 @@ export function formatRelative(timestamp: number, now: number = Date.now()): str
   if (diff < 7 * DAY) return `${Math.floor(diff / DAY)}d ago`;
   return new Date(timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
 }
+
+/** A short calendar date, e.g. "Dec 24, 2026". Used on share cards. */
+export function formatDate(timestamp: number): string {
+  return new Date(timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+}

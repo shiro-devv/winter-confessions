@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { messageFromError } from '../db/errors';
 import { useToast } from '../hooks/toast';
-import { formatRelative } from '../lib/time';
+import { profileUrl } from '../lib/share';
+import { downloadStoryCard } from '../lib/storyCard';
+import { formatDate, formatRelative } from '../lib/time';
 import {
   answerConfession,
   markRead,
@@ -15,11 +17,13 @@ import { ReactionBar } from './ReactionBar';
 
 interface ConfessionCardProps {
   confession: Confession;
+  /** The inbox owner, used on the shared story card. */
+  ownerUsername: string;
   /** Called after a change so the inbox can reload. */
   onChanged: () => void;
 }
 
-export function ConfessionCard({ confession, onChanged }: ConfessionCardProps) {
+export function ConfessionCard({ confession, ownerUsername, onChanged }: ConfessionCardProps) {
   const toast = useToast();
   const [replying, setReplying] = useState(false);
   const [answer, setAnswer] = useState(confession.answer ?? '');
@@ -27,6 +31,7 @@ export function ConfessionCard({ confession, onChanged }: ConfessionCardProps) {
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [savingCard, setSavingCard] = useState(false);
 
   const unread = confession.readAt === null;
 
@@ -52,6 +57,27 @@ export function ConfessionCard({ confession, onChanged }: ConfessionCardProps) {
       await answerConfession(confession.id, answer, isPublic);
       setReplying(false);
     }, isPublic ? 'Reply saved and posted to your public page.' : 'Reply saved privately.');
+  };
+
+  const handleSaveCard = async () => {
+    if (savingCard) return;
+    setSavingCard(true);
+    try {
+      await downloadStoryCard({
+        username: ownerUsername,
+        url: profileUrl(ownerUsername),
+        body: confession.body,
+        promptText: confession.promptText,
+        // Only share a reply the owner chose to make public.
+        answer: confession.isPublic ? confession.answer : null,
+        dateLabel: formatDate(confession.answeredAt ?? confession.createdAt),
+      });
+      toast.show('Story card saved. Share it anywhere.', 'success');
+    } catch (caught) {
+      toast.show(messageFromError(caught), 'error');
+    } finally {
+      setSavingCard(false);
+    }
   };
 
   return (
@@ -140,6 +166,9 @@ export function ConfessionCard({ confession, onChanged }: ConfessionCardProps) {
           <div className="confession-actions">
             <button type="button" className="link-btn" onClick={() => setReplying(true)}>
               {confession.answer ? 'Edit reply' : 'Reply'}
+            </button>
+            <button type="button" className="link-btn" onClick={handleSaveCard} disabled={savingCard}>
+              {savingCard ? 'Saving image...' : 'Save as story'}
             </button>
             {unread && (
               <button
