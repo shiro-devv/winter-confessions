@@ -1037,6 +1037,7 @@ textarea {
 
 .inbox-head {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
   gap: 16px;
@@ -1051,11 +1052,18 @@ textarea {
   margin: 4px 0 0;
 }
 
-.inbox-grid {
+/* The inbox is a single reading column now that the profile has its own page. */
+.inbox-page {
+  max-width: 820px;
+}
+
+/* ---------- Profile ---------- */
+
+.profile-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   align-items: start;
-  gap: 28px;
+  gap: 24px;
 }
 
 .confession-list {
@@ -1227,12 +1235,6 @@ textarea {
   font-weight: 700;
 }
 
-.inbox-side {
-  position: sticky;
-  top: 96px;
-  display: grid;
-  gap: 18px;
-}
 .side-card {
   display: grid;
   gap: 14px;
@@ -1479,13 +1481,6 @@ textarea {
   .games {
     grid-template-columns: repeat(2, 1fr);
   }
-  .inbox-grid {
-    grid-template-columns: 1fr;
-  }
-  .inbox-side {
-    position: static;
-    order: -1;
-  }
 }
 
 @media (max-width: 680px) {
@@ -1519,6 +1514,13 @@ textarea {
 @media (max-width: 420px) {
   .brand-name {
     display: none;
+  }
+  /* Fit Inbox + Profile + Log out on very narrow screens. */
+  .nav-link {
+    padding: 8px 10px;
+  }
+  .nav-actions {
+    gap: 4px;
   }
 }
 

@@ -10,6 +10,7 @@ import Landing from './pages/Landing';
 import Auth from './pages/Auth';
 import Send from './pages/Send';
 import Inbox from './pages/Inbox';
+import Profile from './pages/Profile';
 import NotFound from './pages/NotFound';
 
 export default function App() {
@@ -34,6 +35,14 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <Inbox />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
                 </ProtectedRoute>
               }
             />

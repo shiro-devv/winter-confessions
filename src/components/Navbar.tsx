@@ -91,6 +91,9 @@ export function Navbar() {
                 </span>
               )}
             </Link>
+            <Link to="/profile" className="nav-link">
+              Profile
+            </Link>
             <Button variant="ghost" onClick={() => void handleLogOut()}>
               Log out
             </Button>
