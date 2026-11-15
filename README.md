@@ -21,6 +21,9 @@ npm install
 npm run dev        # http://localhost:5173
 ```
 
+> **New here?** [SETUP.md](SETUP.md) is the full walkthrough: Supabase project, environment
+> variables, local checks, GoatCounter, moderation, and deploying to GitHub Pages.
+
 ### Supabase setup
 
 The app uses Supabase for Auth and Postgres. Add your project credentials to `.env`:
@@ -29,6 +32,15 @@ The app uses Supabase for Auth and Postgres. Add your project credentials to `.e
 VITE_SUPABASE_URL=https://<project-ref>.supabase.co
 VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 ```
+
+Analytics are optional and off by default. To turn on consent-gated, cookieless
+[GoatCounter](https://www.goatcounter.com/) counts, add your site code:
+
+```bash
+VITE_GOATCOUNTER_CODE=yourcode
+```
+
+Leave it out and no analytics script is ever loaded.
 
 Then apply the SQL in `db/migrations/` to the project (SQL editor or `psql`). In the Supabase
 dashboard, set **Authentication → URL Configuration → Site URL** to `http://localhost:5173` and
@@ -66,12 +78,14 @@ Other scripts:
 - Send an anonymous confession to any username (up to 500 characters)
 - Pick a starter prompt: ask me anything, never have I ever, confessions, three words
 - Browse and react (❄️ 💙 😮) to confessions the owner answered publicly
+- Report a public confession for review (see [Reports and moderation](SETUP.md#6-reports-and-moderation))
 
 **Account owners**
 - Sign up and log in with an email and password (the username becomes the public link)
 - A private inbox with All, Unread, and Answered filters
 - Reply to confessions, privately or publicly
 - Mark as read, mark all as read, delete (with a clear confirmation step)
+- Report a confession — public ones, or any in your inbox — for review
 - Copy or share your link, and edit your display name and bio
 
 **Look and feel**
@@ -92,7 +106,7 @@ Other scripts:
 | Animation | Framer Motion, plus CSS keyframes for the marquee |
 | Snow | Hand-written Canvas 2D particle system (no library) |
 | Styling | One plain CSS file with design tokens (CSS variables) |
-| Data | Supabase Auth + Postgres (`db/schema.sql`, `db/migrations/`) |
+| Data | Supabase Auth + Postgres (`db/supabase.sql`, `db/migrations/`) |
 
 ---
 
@@ -100,12 +114,18 @@ Other scripts:
 
 ```
 winter-confessions/
-├── db/schema.sql              PostgreSQL version of the data model
+├── db/supabase.sql            Complete Supabase setup (tables, RLS, RPCs, grants)
+├── db/migrations/             Deltas for a project that already exists
+├── db/schema.sql              Older PostgreSQL model (reference only)
 ├── scripts/smoke.mts          Service-layer checks (run with tsx)
-├── public/favicon.svg
+├── SETUP.md                   Full local + deploy walkthrough
+├── SECURITY.md                How to report a vulnerability
+├── public/
+│   ├── favicon.svg
+│   └── .well-known/security.txt
 ├── index.html
 └── src/
-    ├── main.tsx               Providers: router, motion, toasts, auth
+    ├── main.tsx               Providers: router, motion, toasts, auth, consent
     ├── App.tsx                Routes + page transitions + snow
     ├── styles.css             Tokens, layout, components, responsive rules
     ├── db/                    Legacy browser DB (kept for shared helpers)
@@ -114,38 +134,45 @@ winter-confessions/
     ├── services/              Business rules (the future "API")
     │   ├── auth.ts            Supabase signUp, logIn, logOut, profiles
     │   ├── confessions.ts     send, inbox, reply, delete, reactions, rate limit
+    │   ├── reports.ts         Report a confession for review
     │   ├── crypto.ts          Random ids for the anonymous visitor fingerprint
     │   ├── validation.ts      Limits and input rules
     │   └── visitor.ts         Anonymous per-browser id
-    ├── hooks/                 Supabase auth context, toasts, document title
-    ├── components/            SnowCanvas, Navbar, Marquee, Reveal, ConfessionCard...
-    ├── pages/                 Landing, Auth, Send, Inbox, NotFound
-    └── lib/                   Time formatting, clipboard and share, snow events
+    ├── hooks/                 Supabase auth context, consent, toasts, document title
+    ├── components/            SnowCanvas, Navbar, CookieBanner, CookieSettings, ReportDialog...
+    ├── pages/                 Landing, Auth, Send, Inbox, Profile, Terms, Privacy, Cookies, NotFound
+    └── lib/                   Time, clipboard/share, snow events, consent, analytics, legal
 ```
 
 ---
 
 ## Database
 
-The app is wired to **Supabase** (Auth + Postgres). `db/schema.sql` documents the data model and
-`db/migrations/` holds the grants and indexes the app needs. The old browser-database files in
-`src/db/` are kept only for their shared `AppError` helpers; the live services talk to Supabase.
+The app is wired to **Supabase** (Auth + Postgres). `db/supabase.sql` is the complete, canonical
+setup (tables, Row Level Security, the signup trigger, and the server-side functions);
+`db/migrations/` holds the deltas for a project that already exists, and `db/schema.sql` documents
+the original data model. The old browser-database files in `src/db/` are kept only for their shared
+`AppError` helpers; the live services talk to Supabase.
 
 ### Tables
 
 | Table | Purpose | Key columns |
 | --- | --- | --- |
-| `users` | Accounts | `username` (unique, lower case), `displayName`, `bio`, `passwordHash`, `passwordSalt` |
-| `sessions` | Logins | `userId`, `expiresAt` (30 days) |
+| `profiles` | Public account (one row per auth user) | `id` (= `auth.users.id`), `username` (unique, lower case), `display_name`, `bio` |
 | `prompts` | Starter prompts | `text`, `category` (`ask`, `confess`, `never`, `words`) |
-| `confessions` | Anonymous messages | `recipientId`, `body`, `promptId`, `senderFingerprint`, `readAt`, `answer`, `answeredAt`, `isPublic` |
-| `reactions` | Reactions on public answers | `confessionId`, `fingerprint`, `kind` (unique per visitor, confession, and kind) |
+| `confessions` | Anonymous messages | `recipient_id`, `body`, `prompt_id`, `sender_fingerprint`, `read_at`, `answer`, `answered_at`, `is_public` |
+| `reactions` | Reactions on public answers | `confession_id`, `fingerprint`, `kind` (unique per visitor, confession, and kind) |
+| `reports` | Abuse reports (operator-only) | `confession_id`, `confession_body` snapshot, `reason`, `details`, `reporter_fingerprint`, `status` |
 
 ```
-users 1 ──< sessions
-users 1 ──< confessions >── 0..1 prompts
+auth.users 1 ──1 profiles
+profiles 1 ──< confessions >── 0..1 prompts
 confessions 1 ──< reactions
+confessions 0..1 ──< reports
 ```
+
+> `sender_fingerprint` is deliberately **not** selectable by `anon` or `authenticated`: the grants
+> are column-level, so the services must list the columns they read rather than using `select('*')`.
 
 ### How it works
 
@@ -155,6 +182,8 @@ confessions 1 ──< reactions
 - `src/services/confessions.ts` reads and writes `confessions` directly. Sending a confession and
   toggling a reaction go through `SECURITY DEFINER` RPCs so anonymous visitors never get table
   write access.
+- Reporting a confession goes through the `report_confession` RPC into a private `reports` table
+  that the API roles cannot read; only the operator sees reports, from the Supabase dashboard.
 - Row Level Security limits owners to their own inbox rows; `db/migrations/` supplies the grants
   those policies rely on.
 - Realtime keeps the inbox and unread badge fresh, and the SQL schema enforces length limits and
@@ -240,6 +269,31 @@ Every step below was run, not assumed:
 
 ---
 
+## Privacy, cookies, and legal
+
+- **Legal pages** live at `/terms`, `/privacy`, and `/cookies`, and are linked from the footer.
+- **Cookie consent** is strict opt-in: a banner asks first, and a settings dialog (footer →
+  "Cookie settings") lets people change their mind. The only optional category is analytics.
+- **Only strictly necessary storage runs without consent**: the Supabase session
+  (`sb-<project-ref>-auth-token`) and one anonymous anti-spam id (`wc:visitor`). The consent
+  choice itself is kept in `wc:consent`.
+- **Analytics** (GoatCounter) is cookieless and only loads after opt-in. With no
+  `VITE_GOATCOUNTER_CODE`, nothing loads at all.
+- The wording lives in `src/lib/legal.ts` and the pages under `src/pages`. Keep them in sync with
+  what the app actually does, and replace the operator name and contact email there.
+
+## Security measures
+
+- **Content Security Policy** — injected into the production HTML at build time by the
+  `securityMeta` plugin in `vite.config.ts`. It is a `<meta http-equiv>` tag because GitHub Pages
+  cannot send custom response headers. It locks scripts to `'self'` (plus `gc.zgo.at` for the
+  optional analytics), connects only to `'self'` and the Supabase project, and blocks objects and
+  frames. Note that `frame-ancestors` and `report-uri` cannot be set from a meta tag.
+- **Referrer policy** — `strict-origin-when-cross-origin`.
+- **Vulnerability disclosure** — `public/.well-known/security.txt` and `SECURITY.md`.
+- **Auth forms** use correct `autocomplete` hints, and external links use
+  `rel="noopener noreferrer"`.
+
 ## Security and privacy notes
 
 - Senders are never shown to the recipient. The only sender data stored is a random per-browser
@@ -250,22 +304,22 @@ Every step below was run, not assumed:
 
 ## Known limits of this build
 
-- **Data lives in the browser.** A confession sent from your friend's phone will not reach your
-  inbox on your laptop, because there is no server yet. To go live, add a backend (see
-  [Moving to a real backend](#moving-to-a-real-backend)). The app was structured so that this
-  swap touches only `src/services`.
-- Client-side rate limiting and login checks can be bypassed by anyone who edits their own
-  storage, so a real backend must enforce them again on the server.
-- There is no password reset, email, or moderation tooling yet.
-- Google Fonts (Fraunces and DM Sans) load from the network. Without it, the app falls back to
-  Georgia and system fonts.
+- **Moderation is manual.** Reports land in a private `reports` table that you read from the
+  Supabase dashboard; there is no admin UI yet (see
+  [Reports and moderation](SETUP.md#6-reports-and-moderation)).
+- Sending and reporting are rate-limited on the server (3 confessions per minute, 5 reports per
+  hour), but the anonymous id that backs those limits lives in the browser, so it is a speed bump
+  rather than a hard block.
+- There is no password reset flow yet beyond Supabase's confirmation email.
+- Google Fonts (Fraunces and DM Sans) load from the network, which shares your visitors' IP
+  addresses with Google. This is disclosed in the Privacy Policy; self-hosting the fonts would
+  remove that third party. Without the fonts, the app falls back to Georgia and system fonts.
 - The AnimatedWebs Design Studio skill needs a personal account connection that was not
   available in this session, so the animations were built directly with Framer Motion and CSS.
 
 ## Ideas for next steps
 
-- A Node or Supabase backend using `db/schema.sql`
 - Email or social sign-in and password reset
-- Report and block tools for moderation
+- An admin view for reports (and blocking abusive senders)
 - Share-as-image cards for stories
 - Dark "midnight" theme using the same two brand colors

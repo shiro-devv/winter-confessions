@@ -2,6 +2,8 @@ import { Route, Routes, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { Footer } from './components/Footer';
 import { Navbar } from './components/Navbar';
+import { CookieBanner } from './components/CookieBanner';
+import { CookieSettings } from './components/CookieSettings';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { ScrollToTop } from './components/ScrollToTop';
 import { SnowCanvas } from './components/SnowCanvas';
@@ -11,6 +13,9 @@ import Auth from './pages/Auth';
 import Send from './pages/Send';
 import Inbox from './pages/Inbox';
 import Profile from './pages/Profile';
+import Terms from './pages/Terms';
+import Privacy from './pages/Privacy';
+import Cookies from './pages/Cookies';
 import NotFound from './pages/NotFound';
 
 export default function App() {
@@ -46,11 +51,16 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/cookies" element={<Cookies />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AnimatePresence>
         <Footer />
       </div>
+      <CookieBanner />
+      <CookieSettings />
     </>
   );
 }

@@ -5,6 +5,7 @@ import { Avatar } from '../components/Avatar';
 import { Button } from '../components/Button';
 import { PageTransition } from '../components/PageTransition';
 import { ReactionBar } from '../components/ReactionBar';
+import { ReportDialog } from '../components/ReportDialog';
 import { messageFromError } from '../db/errors';
 import { useAuth } from '../hooks/auth';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
@@ -49,6 +50,7 @@ export default function Send() {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [savingCard, setSavingCard] = useState<string | null>(null);
+  const [reporting, setReporting] = useState<string | null>(null);
 
   useDocumentTitle(
     profile === undefined
@@ -367,6 +369,13 @@ export default function Send() {
                         >
                           {savingCard === confession.id ? 'Saving...' : 'Save as story'}
                         </button>
+                        <button
+                          type="button"
+                          className="link-btn"
+                          onClick={() => setReporting(confession.id)}
+                        >
+                          Report
+                        </button>
                       </div>
                     </div>
                   </motion.li>
@@ -379,6 +388,12 @@ export default function Send() {
           </p>
         </section>
       </div>
+
+      <ReportDialog
+        open={reporting !== null}
+        onClose={() => setReporting(null)}
+        confessionId={reporting ?? ''}
+      />
     </PageTransition>
   );
 }

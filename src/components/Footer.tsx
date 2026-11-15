@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/auth';
+import { useConsent } from '../hooks/consent';
 import { Snowflake } from './Snowflake';
 
 export function Footer() {
   const { user, loading } = useAuth();
+  const { openSettings } = useConsent();
 
   return (
     <footer className="footer">
@@ -14,6 +16,12 @@ export function Footer() {
         </div>
         <nav className="footer-links" aria-label="Footer">
           <Link to="/">Home</Link>
+          <Link to="/terms">Terms</Link>
+          <Link to="/privacy">Privacy</Link>
+          <Link to="/cookies">Cookies</Link>
+          <button type="button" className="footer-link-btn" onClick={openSettings}>
+            Cookie settings
+          </button>
           {!loading && !user && (
             <>
               <Link to="/auth?mode=signup">Create account</Link>

@@ -14,6 +14,7 @@ import {
 import { LIMITS } from '../services/validation';
 import { Button } from './Button';
 import { ReactionBar } from './ReactionBar';
+import { ReportDialog } from './ReportDialog';
 
 interface ConfessionCardProps {
   confession: Confession;
@@ -29,6 +30,7 @@ export function ConfessionCard({ confession, ownerUsername, onChanged }: Confess
   const [answer, setAnswer] = useState(confession.answer ?? '');
   const [isPublic, setIsPublic] = useState(confession.isPublic);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [reporting, setReporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [savingCard, setSavingCard] = useState(false);
@@ -207,9 +209,14 @@ export function ConfessionCard({ confession, ownerUsername, onChanged }: Confess
             <button type="button" className="link-btn link-danger" onClick={() => setConfirmingDelete(true)}>
               Delete
             </button>
+            <button type="button" className="link-btn" onClick={() => setReporting(true)}>
+              Report
+            </button>
           </div>
         )
       )}
+
+      <ReportDialog open={reporting} onClose={() => setReporting(false)} confessionId={confession.id} />
     </motion.li>
   );
 }

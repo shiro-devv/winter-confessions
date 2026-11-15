@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { MotionConfig } from 'framer-motion';
 import App from './App';
 import { AuthProvider } from './hooks/auth';
+import { ConsentProvider } from './hooks/consent';
 import { ToastProvider } from './hooks/toast';
 import './styles.css';
 
@@ -19,7 +20,9 @@ createRoot(container).render(
       <MotionConfig reducedMotion="user">
         <ToastProvider>
           <AuthProvider>
-            <App />
+            <ConsentProvider>
+              <App />
+            </ConsentProvider>
           </AuthProvider>
         </ToastProvider>
       </MotionConfig>
