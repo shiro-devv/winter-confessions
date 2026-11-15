@@ -40,6 +40,13 @@ const GAP = 44;
 const REGION_TOP = 380;
 const REGION_BOTTOM = 1470;
 
+// Footer / QR geometry, shared so the snowman can avoid the QR panel.
+const FOOTER_TOP = 1540;
+const QR_SIZE = 216;
+const QR_PAD = 26;
+const QR_X = CARD_X + CARD_W - QR_PAD - QR_SIZE;
+const QR_PANEL_LEFT = QR_X - QR_PAD;
+
 type Ctx = CanvasRenderingContext2D;
 
 interface FittedText {
@@ -269,11 +276,111 @@ function drawSnowfall(ctx: Ctx): void {
   ctx.restore();
 }
 
+/** Draws a friendly snowman standing on the ground at (cx, baseY). */
+function drawSnowman(ctx: Ctx, cx: number, baseY: number, height: number): void {
+  const r1 = height * 0.27;
+  const r2 = height * 0.185;
+  const r3 = height * 0.125;
+  const cy1 = baseY - r1;
+  const cy2 = cy1 - (r1 + r2) * 0.82;
+  const cy3 = cy2 - (r2 + r3) * 0.82;
+  const outline = 'rgba(15, 27, 61, 0.16)';
+
+  ctx.save();
+
+  // Soft shadow so the snowman looks like it is standing on the ground.
+  ctx.fillStyle = 'rgba(15, 27, 61, 0.12)';
+  ctx.beginPath();
+  ctx.ellipse(cx, baseY, r1 * 1.05, r1 * 0.22, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  const ball = (x: number, y: number, r: number) => {
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fillStyle = C.white;
+    ctx.fill();
+    ctx.lineWidth = Math.max(1.5, r * 0.045);
+    ctx.strokeStyle = outline;
+    ctx.stroke();
+  };
+  ball(cx, cy1, r1);
+  ball(cx, cy2, r2);
+  ball(cx, cy3, r3);
+
+  // Twig arms.
+  ctx.strokeStyle = '#7a5230';
+  ctx.lineCap = 'round';
+  ctx.lineWidth = Math.max(2, height * 0.015);
+  for (const dir of [-1, 1]) {
+    ctx.beginPath();
+    ctx.moveTo(cx + dir * r2 * 0.55, cy2);
+    ctx.lineTo(cx + dir * (r2 + height * 0.17), cy2 - height * 0.06);
+    ctx.moveTo(cx + dir * (r2 + height * 0.09), cy2 - height * 0.03);
+    ctx.lineTo(cx + dir * (r2 + height * 0.14), cy2 - height * 0.12);
+    ctx.stroke();
+  }
+
+  // Scarf around the neck, with a short tail.
+  const neckY = cy2 - r2 * 0.62;
+  ctx.fillStyle = C.blue;
+  ctx.beginPath();
+  ctx.ellipse(cx, neckY, r3 * 1.25, r3 * 0.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(cx - r3 * 0.35, neckY);
+  ctx.lineTo(cx - r3 * 0.05, neckY);
+  ctx.lineTo(cx - r3 * 0.25, neckY + height * 0.2);
+  ctx.lineTo(cx - r3 * 0.62, neckY + height * 0.17);
+  ctx.closePath();
+  ctx.fill();
+
+  // Eyes.
+  ctx.fillStyle = C.ink;
+  const eyeR = Math.max(1.6, r3 * 0.12);
+  for (const dir of [-1, 1]) {
+    ctx.beginPath();
+    ctx.arc(cx + dir * r3 * 0.36, cy3 - r3 * 0.2, eyeR, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Carrot nose.
+  ctx.fillStyle = '#e8842f';
+  ctx.beginPath();
+  ctx.moveTo(cx + r3 * 0.05, cy3 + r3 * 0.02);
+  ctx.lineTo(cx + r3 * 1.05, cy3 + r3 * 0.18);
+  ctx.lineTo(cx + r3 * 0.05, cy3 + r3 * 0.32);
+  ctx.closePath();
+  ctx.fill();
+
+  // Buttons down the middle ball, below the scarf.
+  ctx.fillStyle = C.inkSoft;
+  for (let i = 0; i < 3; i += 1) {
+    const t = -0.02 + i * 0.36;
+    ctx.beginPath();
+    ctx.arc(cx, cy2 + r2 * t, Math.max(1.4, r2 * 0.1), 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
+/** Adds one snowman somewhere along the bottom, with a random spot and size. */
+function drawRandomSnowman(ctx: Ctx): void {
+  const height = 110 + Math.random() * 70;
+  const minX = CARD_X + 70;
+  // Stay clear of the QR panel so the code stays crisp and unbroken.
+  const maxX = Math.max(minX, QR_PANEL_LEFT - 130);
+  const cx = minX + Math.random() * (maxX - minX);
+  // Sit below the footer text so the face is never hidden by it.
+  const baseY = STORY_HEIGHT - 14 - Math.random() * 20;
+  drawSnowman(ctx, cx, baseY, height);
+}
+
 function drawFooter(ctx: Ctx, username: string, url: string): void {
-  const top = 1540;
-  const qrSize = 216;
-  const tilePad = 26;
-  const qrX = CARD_X + CARD_W - tilePad - qrSize;
+  const top = FOOTER_TOP;
+  const qrSize = QR_SIZE;
+  const tilePad = QR_PAD;
+  const qrX = QR_X;
   const textX = CARD_X + 20;
   const textW = qrX - tilePad - textX - 40;
 
@@ -409,6 +516,7 @@ export function drawStoryCard(ctx: Ctx, input: StoryCardInput): void {
     }
   }
 
+  drawRandomSnowman(ctx);
   drawFooter(ctx, username, input.url);
   ctx.restore();
 }

@@ -1127,9 +1127,20 @@ textarea {
   overflow-wrap: anywhere;
 }
 .answer-label {
-  font-size: 0.82rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  font-size: 0.78rem;
   font-weight: 700;
   color: var(--secondary-darker);
+  background: var(--white);
+  border-radius: 999px;
+}
+/* A public reply gets a filled badge so its visibility is obvious at a glance. */
+.answer-label-public {
+  color: var(--white);
+  background: var(--secondary);
 }
 .confession-actions {
   display: flex;
@@ -1140,16 +1151,66 @@ textarea {
   display: grid;
   gap: 12px;
 }
-.check {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
+/* Reply visibility: two explicit, tappable options instead of a checkbox. */
+.visibility {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
 }
-.check input {
-  width: 20px;
-  height: 20px;
-  accent-color: var(--secondary);
+.visibility legend {
+  padding: 0;
+  margin-bottom: 10px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+.visibility-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.visibility-option {
+  display: grid;
+  gap: 3px;
+  padding: 12px 14px;
+  text-align: left;
+  background: var(--white);
+  border: 2px solid var(--primary-dark);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    background 0.2s,
+    box-shadow 0.2s;
+}
+.visibility-option:hover {
+  border-color: var(--ink);
+}
+.visibility-option-active {
+  background: rgba(47, 107, 255, 0.1);
+  border-color: var(--secondary);
+  box-shadow: 0 0 0 3px rgba(47, 107, 255, 0.16);
+}
+.visibility-option-active:hover {
+  border-color: var(--secondary);
+}
+/* The radios are visually hidden, so show focus on the whole option card. */
+.visibility-option:focus-within {
+  outline: 3px solid var(--ink);
+  outline-offset: 3px;
+}
+/* Where supported, hide that ring for pointer users (keyboard focus keeps it). */
+.visibility-option:has(input:not(:focus-visible)) {
+  outline: none;
+}
+.visibility-title {
+  font-weight: 700;
+  color: var(--ink);
+}
+.visibility-hint {
+  font-size: 0.82rem;
+  color: var(--ink-soft);
 }
 .row {
   display: flex;
@@ -1448,6 +1509,10 @@ textarea {
   }
   .send-head h1 {
     font-size: 1.2rem;
+  }
+  /* Stack the reply-visibility options so their hints stay readable. */
+  .visibility-options {
+    grid-template-columns: 1fr;
   }
 }
 

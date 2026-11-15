@@ -101,8 +101,8 @@ export function ConfessionCard({ confession, ownerUsername, onChanged }: Confess
 
       {confession.answer && !replying && (
         <div className="confession-answer">
-          <span className="answer-label">
-            Your reply · {confession.isPublic ? 'public' : 'private'}
+          <span className={`answer-label ${confession.isPublic ? 'answer-label-public' : ''}`}>
+            Your reply · {confession.isPublic ? '🌐 public' : '🔒 private'}
           </span>
           <p>{confession.answer}</p>
           {confession.isPublic && <ReactionBar confessionId={confession.id} readOnly />}
@@ -123,10 +123,33 @@ export function ConfessionCard({ confession, ownerUsername, onChanged }: Confess
             onChange={(event) => setAnswer(event.target.value)}
             autoFocus
           />
-          <label className="check">
-            <input type="checkbox" checked={isPublic} onChange={(event) => setIsPublic(event.target.checked)} />
-            <span>Show this reply on my public page</span>
-          </label>
+          <fieldset className="visibility">
+            <legend>Who can see your reply?</legend>
+            <div className="visibility-options">
+              <label className={`visibility-option ${isPublic ? '' : 'visibility-option-active'}`}>
+                <input
+                  type="radio"
+                  className="sr-only"
+                  name={`visibility-${confession.id}`}
+                  checked={!isPublic}
+                  onChange={() => setIsPublic(false)}
+                />
+                <span className="visibility-title">🔒 Private</span>
+                <span className="visibility-hint">Only you can see it</span>
+              </label>
+              <label className={`visibility-option ${isPublic ? 'visibility-option-active' : ''}`}>
+                <input
+                  type="radio"
+                  className="sr-only"
+                  name={`visibility-${confession.id}`}
+                  checked={isPublic}
+                  onChange={() => setIsPublic(true)}
+                />
+                <span className="visibility-title">🌐 Public</span>
+                <span className="visibility-hint">Shown on your public page</span>
+              </label>
+            </div>
+          </fieldset>
           {error && (
             <p className="form-error" role="alert">
               {error}
