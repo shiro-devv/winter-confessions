@@ -216,6 +216,19 @@ export async function requestPasswordReset(email: string): Promise<void> {
   if (error) throw authError(error);
 }
 
+/**
+ * Emails a password-reset link to the signed-in account. Used from the profile
+ * by people who no longer remember their current password.
+ */
+export async function requestPasswordResetForCurrentUser(): Promise<void> {
+  const { data, error } = await supabase.auth.getUser();
+  const email = data.user?.email;
+  if (error || !email) {
+    throw new AppError('unauthorized', 'We could not read your account email. Please log in again.');
+  }
+  await requestPasswordReset(email);
+}
+
 /** Sets a new password for the person with the current recovery session. */
 export async function updatePassword(password: string): Promise<void> {
   const passwordError = validatePassword(password);

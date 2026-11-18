@@ -14,6 +14,7 @@ import {
   logIn,
   logOut,
   requestPasswordReset,
+  requestPasswordResetForCurrentUser,
   signUp,
   updatePassword,
   updateProfile,
@@ -28,6 +29,7 @@ interface AuthValue {
   logIn: typeof logIn;
   logOut: typeof logOut;
   requestPasswordReset: typeof requestPasswordReset;
+  requestPasswordResetForCurrentUser: typeof requestPasswordResetForCurrentUser;
   updatePassword: typeof updatePassword;
   changePassword: typeof changePassword;
   updateProfile: typeof updateProfile;
@@ -112,6 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logIn,
       logOut,
       requestPasswordReset,
+      requestPasswordResetForCurrentUser,
       updatePassword,
       changePassword,
       updateProfile: saveProfile,

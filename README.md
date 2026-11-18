@@ -310,7 +310,8 @@ Every step below was run, not assumed:
 - Password reset uses a single-use recovery link. Setting a new password also signs out every other
   session, so someone who knew the old password loses access.
 - A logged-in person can also change their password from the profile page. The form re-checks the
-  current password first, so a borrowed session cannot take over the account.
+  current password first, so a borrowed session cannot take over the account, and a "Forgot your
+  current password?" link emails a reset instead for anyone who cannot remember it.
 - All text is rendered by React, which escapes it, so confessions cannot inject HTML.
 - Redirect targets after login are checked so they can only point inside the app.
 
@@ -324,8 +325,9 @@ Every step below was run, not assumed:
   rather than a hard block.
 - Password reset works through Supabase's recovery email. "Forgot password?" on the login form sends
   the link, and `/reset-password` lets the person set a new password and signs out their other
-  sessions. Logged-in people can change their password from the profile page instead. It still
-  relies on Supabase's rate-limited built-in mailer unless you configure custom SMTP.
+  sessions. Logged-in people can change their password from the profile page instead, with an email
+  reset as the fallback if they have forgotten the current one. It still relies on Supabase's
+  rate-limited built-in mailer unless you configure custom SMTP.
 - Google Fonts (Fraunces and DM Sans) load from the network, which shares your visitors' IP
   addresses with Google. This is disclosed in the Privacy Policy; self-hosting the fonts would
   remove that third party. Without the fonts, the app falls back to Georgia and system fonts.

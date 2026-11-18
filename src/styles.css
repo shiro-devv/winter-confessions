@@ -1386,13 +1386,21 @@ textarea {
   margin: 0;
   font-size: 0.92rem;
 }
-/* Change-password form sits under the profile cards, in a readable column. */
-.password-card {
-  max-width: 460px;
-  margin-top: 24px;
-}
-.password-card .muted {
+/* Intro copy at the top of the change-password dialog. */
+.password-intro {
   margin: 0;
+  font-size: 0.95rem;
+}
+/* Recovery path for people who do not remember their current password. */
+.password-alt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid rgb(var(--ink-rgb) / 0.16);
   font-size: 0.95rem;
 }
 
