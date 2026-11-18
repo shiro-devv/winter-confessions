@@ -4,9 +4,34 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="color-scheme" content="light" />
+    <meta name="color-scheme" content="only light" />
     <meta name="theme-color" content="#D8CBB3" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <!--
+      Apply the saved (or OS) theme before first paint so dark-mode visitors
+      never see a flash of the light theme. Kept inline and tiny; its SHA-256
+      hash is added to the build CSP in vite.config.ts.
+    -->
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem('wc:theme');
+          var theme =
+            saved === 'light' || saved === 'dark'
+              ? saved
+              : window.matchMedia('(prefers-color-scheme: dark)').matches
+                ? 'dark'
+                : 'light';
+          document.documentElement.dataset.theme = theme;
+          var scheme = document.querySelector('meta[name="color-scheme"]');
+          if (scheme) scheme.setAttribute('content', theme === 'dark' ? 'dark' : 'only light');
+          var color = document.querySelector('meta[name="theme-color"]');
+          if (color) color.setAttribute('content', theme === 'dark' ? '#0A1122' : '#D8CBB3');
+        } catch (e) {
+          /* Storage blocked; the CSS default (light) still applies. */
+        }
+      })();
+    </script>
     <meta
       name="description"
       content="Winter Confessions: get anonymous confessions from friends. Warm secrets for cold nights."

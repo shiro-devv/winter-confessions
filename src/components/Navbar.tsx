@@ -8,14 +8,24 @@ import { supabase } from '../lib/supabase';
 import { unreadCount } from '../services/confessions';
 import { Button } from './Button';
 import { Snowflake } from './Snowflake';
+import { ThemeToggle } from './ThemeToggle';
 
 export function Navbar() {
   const { user, loading, logOut } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
   const [unread, setUnread] = useState(0);
+  const [scrolled, setScrolled] = useState(false);
 
   const userId = user?.id ?? null;
+
+  // Give the sticky bar a stronger shadow once the page has moved.
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   // Keep the badge fresh: load once, then follow new confessions and tab focus.
   useEffect(() => {
@@ -64,7 +74,7 @@ export function Navbar() {
 
   return (
     <motion.header
-      className="nav"
+      className={`nav ${scrolled ? 'nav-scrolled' : ''}`}
       initial={{ y: -64, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
@@ -106,6 +116,7 @@ export function Navbar() {
             <Button to="/auth?mode=signup">Get your link</Button>
           </>
         )}
+        <ThemeToggle />
       </nav>
     </motion.header>
   );

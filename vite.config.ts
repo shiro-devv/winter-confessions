@@ -1,4 +1,5 @@
 import { defineConfig, type Plugin } from 'vite';
+import { createHash } from 'node:crypto';
 import react from '@vitejs/plugin-react';
 
 /**
@@ -31,6 +32,12 @@ function securityMeta(): Plugin {
       handler(html) {
         const connect = supabaseOrigin || 'https://*.supabase.co';
         const socket = supabaseOrigin ? supabaseOrigin.replace(/^https:/, 'wss:') : 'wss://*.supabase.co';
+        // Allow the inline theme script by hash instead of opening up script-src.
+        const inlineHashes = [...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi)]
+          .map((match) => match[1])
+          .filter((body) => body.trim().length > 0)
+          .map((body) => `'sha256-${createHash('sha256').update(body).digest('base64')}'`);
+        const scriptSrc = ["'self'", 'https://gc.zgo.at', ...inlineHashes].join(' ');
         const csp = [
           "default-src 'self'",
           "base-uri 'self'",
@@ -40,7 +47,7 @@ function securityMeta(): Plugin {
           "img-src 'self' data: blob: https://*.goatcounter.com",
           "font-src 'self' data: https://fonts.gstatic.com",
           "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-          "script-src 'self' https://gc.zgo.at",
+          `script-src ${scriptSrc}`,
           `connect-src 'self' ${connect} ${socket} https://*.goatcounter.com https://fonts.googleapis.com https://fonts.gstatic.com`,
           "manifest-src 'self'",
           "worker-src 'self' blob:",

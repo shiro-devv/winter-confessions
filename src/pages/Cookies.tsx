@@ -88,6 +88,15 @@ export default function Cookies() {
                 <td>Strictly necessary</td>
               </tr>
               <tr>
+                <td>
+                  <code>wc:theme</code>
+                </td>
+                <td>Local storage</td>
+                <td>Remembers whether you picked the light or dark theme.</td>
+                <td>Until you clear your browser storage</td>
+                <td>Strictly necessary</td>
+              </tr>
+              <tr>
                 <td>GoatCounter</td>
                 <td>No cookies</td>
                 <td>
