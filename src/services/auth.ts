@@ -229,6 +229,42 @@ export async function updatePassword(password: string): Promise<void> {
   await supabase.auth.signOut({ scope: 'others' });
 }
 
+/**
+ * Changes the password of the signed-in account.
+ *
+ * Supabase would let us set a new password from any active session, so we
+ * re-check the current password first. That way someone who borrowed an
+ * unlocked device cannot quietly take the account over.
+ */
+export async function changePassword(
+  currentPassword: string,
+  newPassword: string,
+): Promise<void> {
+  const passwordError = validatePassword(newPassword);
+  if (passwordError) throw new AppError('validation', passwordError);
+
+  const { data, error: userError } = await supabase.auth.getUser();
+  const email = data.user?.email;
+  if (userError || !email) {
+    throw new AppError('unauthorized', 'We could not verify your account. Please log in again.');
+  }
+
+  const { error: verifyError } = await supabase.auth.signInWithPassword({
+    email,
+    password: currentPassword,
+  });
+  if (verifyError) {
+    if (verifyError.code === 'invalid_credentials') {
+      throw new AppError('unauthorized', 'Your current password is not correct.');
+    }
+    throw authError(verifyError);
+  }
+
+  // Reuse the recovery-session update so the same rules apply, including
+  // signing out every other device.
+  await updatePassword(newPassword);
+}
+
 export async function updateProfile(
   userId: string,
   patch: { displayName: string; bio: string },

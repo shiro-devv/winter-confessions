@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { supabase } from '../lib/supabase';
 import {
+  changePassword,
   fetchProfile,
   logIn,
   logOut,
@@ -28,6 +29,7 @@ interface AuthValue {
   logOut: typeof logOut;
   requestPasswordReset: typeof requestPasswordReset;
   updatePassword: typeof updatePassword;
+  changePassword: typeof changePassword;
   updateProfile: typeof updateProfile;
   /** Re-reads the current session and profile after an auth change. */
   refresh: () => Promise<Profile | null>;
@@ -111,6 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logOut,
       requestPasswordReset,
       updatePassword,
+      changePassword,
       updateProfile: saveProfile,
       refresh,
     }),
