@@ -12,7 +12,9 @@ import {
   fetchProfile,
   logIn,
   logOut,
+  requestPasswordReset,
   signUp,
+  updatePassword,
   updateProfile,
   type Profile,
 } from '../services/auth';
@@ -24,6 +26,8 @@ interface AuthValue {
   signUp: typeof signUp;
   logIn: typeof logIn;
   logOut: typeof logOut;
+  requestPasswordReset: typeof requestPasswordReset;
+  updatePassword: typeof updatePassword;
   updateProfile: typeof updateProfile;
   /** Re-reads the current session and profile after an auth change. */
   refresh: () => Promise<Profile | null>;
@@ -99,7 +103,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<AuthValue>(
-    () => ({ user, loading, signUp, logIn, logOut, updateProfile: saveProfile, refresh }),
+    () => ({
+      user,
+      loading,
+      signUp,
+      logIn,
+      logOut,
+      requestPasswordReset,
+      updatePassword,
+      updateProfile: saveProfile,
+      refresh,
+    }),
     [user, loading, saveProfile, refresh],
   );
 

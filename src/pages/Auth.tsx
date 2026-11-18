@@ -10,7 +10,7 @@ import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { useToast } from '../hooks/toast';
 import { LIMITS, normalizeUsername } from '../services/validation';
 
-type Mode = 'signup' | 'login';
+type Mode = 'signup' | 'login' | 'reset';
 
 /** Only allow redirects to pages inside this app. */
 function safeNext(raw: string | null): string {
@@ -20,10 +20,12 @@ function safeNext(raw: string | null): string {
 
 export default function Auth() {
   const [params, setParams] = useSearchParams();
-  const mode: Mode = params.get('mode') === 'login' ? 'login' : 'signup';
+  const requestedMode = params.get('mode');
+  const mode: Mode =
+    requestedMode === 'login' || requestedMode === 'reset' ? requestedMode : 'signup';
   const next = safeNext(params.get('next'));
 
-  const { user, loading, signUp, logIn, refresh } = useAuth();
+  const { user, loading, signUp, logIn, requestPasswordReset, refresh } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
 
@@ -35,8 +37,11 @@ export default function Auth() {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [confirmationSent, setConfirmationSent] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
-  useDocumentTitle(mode === 'signup' ? 'Create your link' : 'Log in');
+  useDocumentTitle(
+    mode === 'signup' ? 'Create your link' : mode === 'reset' ? 'Reset your password' : 'Log in',
+  );
 
   // Wait for the session check so we do not flash the form for a logged-in person.
   if (loading) return null;
@@ -45,6 +50,7 @@ export default function Auth() {
   const switchMode = (target: Mode) => {
     setError(null);
     setConfirmationSent(false);
+    setResetSent(false);
     const nextParams = new URLSearchParams(params);
     nextParams.set('mode', target);
     setParams(nextParams, { replace: true });
@@ -65,6 +71,11 @@ export default function Auth() {
         }
         await refresh();
         toast.show(`Welcome, @${created.username}! Your link is ready.`, 'success');
+      } else if (mode === 'reset') {
+        await requestPasswordReset(email);
+        setResetSent(true);
+        toast.show('If that email has an account, a reset link is on its way.', 'success');
+        return;
       } else {
         const profile = await logIn(email, password);
         await refresh();
@@ -93,28 +104,34 @@ export default function Auth() {
         <div className="auth-icon">
           <Snowflake size={34} />
         </div>
-        <h1 className="auth-title">{mode === 'signup' ? 'Create your confession link' : 'Welcome back'}</h1>
+        <h1 className="auth-title">
+          {mode === 'signup' ? 'Create your confession link' : mode === 'reset' ? 'Reset your password' : 'Welcome back'}
+        </h1>
         <p className="auth-sub">
           {mode === 'signup'
             ? 'Pick a username and add an email. The username becomes the link your friends use to write to you.'
-            : 'Log in with the email you signed up with.'}
+            : mode === 'reset'
+              ? 'Enter the email you signed up with and we will send a link to choose a new password.'
+              : 'Log in with the email you signed up with.'}
         </p>
 
-        <div className="tabs" role="tablist" aria-label="Account">
-          {(['signup', 'login'] as const).map((tab) => (
-            <button
-              key={tab}
-              type="button"
-              role="tab"
-              aria-selected={mode === tab}
-              className={`tab ${mode === tab ? 'tab-active' : ''}`}
-              onClick={() => switchMode(tab)}
-            >
-              {mode === tab && <motion.span layoutId="auth-tab" className="tab-pill" />}
-              <span className="tab-label">{tab === 'signup' ? 'Create account' : 'Log in'}</span>
-            </button>
-          ))}
-        </div>
+        {mode !== 'reset' && (
+          <div className="tabs" role="tablist" aria-label="Account">
+            {(['signup', 'login'] as const).map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                role="tab"
+                aria-selected={mode === tab}
+                className={`tab ${mode === tab ? 'tab-active' : ''}`}
+                onClick={() => switchMode(tab)}
+              >
+                {mode === tab && <motion.span layoutId="auth-tab" className="tab-pill" />}
+                <span className="tab-label">{tab === 'signup' ? 'Create account' : 'Log in'}</span>
+              </button>
+            ))}
+          </div>
+        )}
 
         {confirmationSent ? (
           <div className="form">
@@ -124,6 +141,16 @@ export default function Auth() {
             </p>
             <Button type="button" block onClick={() => switchMode('login')}>
               Go to log in
+            </Button>
+          </div>
+        ) : resetSent ? (
+          <div className="form">
+            <p className="notice">
+              If <strong>{email}</strong> has an account, we sent a link to choose a new password. It
+              can take a minute to arrive. Check your spam folder too.
+            </p>
+            <Button type="button" block onClick={() => switchMode('login')}>
+              Back to log in
             </Button>
           </div>
         ) : (
@@ -205,35 +232,45 @@ export default function Auth() {
               )}
             </div>
 
-            <div className="field">
-              <label htmlFor="password">Password</label>
-              <div className="input-suffix">
-                <input
-                  id="password"
-                  name="password"
-                  type={showPassword ? 'text' : 'password'}
-                  autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-                  maxLength={LIMITS.passwordMax}
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  aria-describedby={mode === 'signup' ? 'password-hint' : undefined}
-                  required
-                />
-                <button
-                  type="button"
-                  className="suffix-btn"
-                  onClick={() => setShowPassword((current) => !current)}
-                  aria-pressed={showPassword}
-                >
-                  {showPassword ? 'Hide' : 'Show'}
+            {mode !== 'reset' && (
+              <div className="field">
+                <label htmlFor="password">Password</label>
+                <div className="input-suffix">
+                  <input
+                    id="password"
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+                    maxLength={LIMITS.passwordMax}
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    aria-describedby={mode === 'signup' ? 'password-hint' : undefined}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="suffix-btn"
+                    onClick={() => setShowPassword((current) => !current)}
+                    aria-pressed={showPassword}
+                  >
+                    {showPassword ? 'Hide' : 'Show'}
+                  </button>
+                </div>
+                {mode === 'signup' && (
+                  <p id="password-hint" className="hint">
+                    At least {LIMITS.passwordMin} characters.
+                  </p>
+                )}
+              </div>
+            )}
+
+            {mode === 'login' && (
+              <div className="auth-extra">
+                <button type="button" className="link-btn" onClick={() => switchMode('reset')}>
+                  Forgot password?
                 </button>
               </div>
-              {mode === 'signup' && (
-                <p id="password-hint" className="hint">
-                  At least {LIMITS.passwordMin} characters.
-                </p>
-              )}
-            </div>
+            )}
 
             <AnimatePresence>
               {error && (
@@ -255,10 +292,14 @@ export default function Auth() {
               {pending
                 ? mode === 'signup'
                   ? 'Creating your link...'
-                  : 'Logging in...'
+                  : mode === 'reset'
+                    ? 'Sending link...'
+                    : 'Logging in...'
                 : mode === 'signup'
                   ? 'Create my link'
-                  : 'Log in'}
+                  : mode === 'reset'
+                    ? 'Send reset link'
+                    : 'Log in'}
             </Button>
           </form>
         )}

@@ -121,6 +121,9 @@ Go to **Authentication → URL Configuration**:
   - `http://localhost:5173/**` for local development, and
   - `https://shiro-devv.github.io/winter-confessions/**` for the deployed site.
 
+The `/**` entries cover both the email-confirmation link (`/auth`) and the password-reset link
+(`/reset-password`). If you narrow them to exact paths, keep both.
+
 ### 2.5 Decide how email confirmation works
 
 By default Supabase sends a confirmation email on signup. The built-in mailer is rate-limited to a
@@ -317,7 +320,9 @@ address, keeping the localhost entries in the redirect list for future developme
 | Report reasons or limits | `src/services/reports.ts` **and** the SQL in `db/` |
 | Rate limit for sending (3/min) | `db/supabase.sql` (`send_confession`) |
 | Colors, fonts, layout | `src/styles.css` |
-| CSP rules | `securityMeta` in `vite.config.ts` |
+| Light / dark theme palettes | `:root` and `html[data-theme='dark']` in `src/styles.css` |
+| Theme toggle behavior | `src/lib/theme.ts`, `src/hooks/theme.ts` |
+| CSP rules | `securityMeta` in `vite.config.ts` (inline scripts are hashed automatically) |
 | Base path / repo name | `base` in `vite.config.ts` |
 
 ---
@@ -352,6 +357,11 @@ The `reports` table / `report_confession` function is missing. Run
 **Analytics never loads.**
 `VITE_GOATCOUNTER_CODE` is unset, or the visitor has not opted in. Both are intentional.
 
+**Dark mode flashes the light theme on load.**
+The inline script in `index.html` is what sets the theme before first paint. It is allowed by a
+SHA-256 hash that `securityMeta` computes at build time, so a normal `npm run build` is enough. If
+you move that script into a separate file, it must still run before the stylesheet.
+
 **Console shows a CSP violation for Supabase or fonts.**
 Rebuild after setting `VITE_SUPABASE_URL`; the CSP reads it at build time. If you self-host fonts
 later, add their origin to the `font-src` / `style-src` rules in `vite.config.ts`.
@@ -360,7 +370,9 @@ later, add their origin to the `font-src` / `style-src` rules in `vite.config.ts
 
 ## 11. Going further
 
-- Add password reset and email/social sign-in in Supabase Auth.
+- Add email/social sign-in in Supabase Auth.
+- Turn on Supabase's leaked-password protection (Authentication → Providers → Email) so breached
+  passwords are rejected at signup and reset.
 - Add a lightweight admin view (Supabase dashboard, or a small protected page) for reports.
 - Swap the browser-stored anonymous id for something server-side if you need stronger abuse
   controls.

@@ -4,9 +4,9 @@
    ========================================================================== */
 
 :root {
-  /* This is a light-only design. Declaring it stops mobile browsers from
-     auto-darkening the sand background, which otherwise left the fixed dark
-     and cream text sitting on a dark backdrop with poor contrast. */
+  /* Light theme. "only light" opts out of Chrome's forced auto-dark on Android,
+     which would otherwise repaint the sand background dark and hurt contrast.
+     The dark theme below sets `color-scheme: dark`, which wins by specificity. */
   color-scheme: light;
   color-scheme: only light;
 
@@ -25,14 +25,75 @@
   --white: #ffffff;
   --danger: #a3261f;
 
+  /* Surfaces and accents that need a value per theme. */
+  --field: #ffffff; /* inputs and raised "paper" surfaces */
+  --solid: #0f1b3d; /* solid dark chips (secondary button, toast) */
+  --solid-hover: rgb(26 42 92);
+  --icon-accent: var(--secondary);
+  --ok: rgb(159 217 166);
+  --warn: rgb(245 165 156);
+  --danger-bg: rgb(251 233 230);
+  --danger-border: rgb(233 183 176);
+  --hard-shadow: rgb(15 27 61 / 0.92);
+  --overlay: rgb(15 27 61 / 0.55);
+  --body-glow-a: rgb(var(--secondary-rgb) / 0.16);
+  --body-glow-b: rgb(var(--white-rgb) / 0.45);
+
+  /* Raw channels so translucent tints can follow the theme. */
+  --secondary-rgb: 47 107 255;
+  --ink-rgb: 15 27 61;
+  --white-rgb: 255 255 255;
+  --nav-rgb: 247 242 232;
+  --nav-border-rgb: 191 175 146;
+
   --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
   --font-body: 'DM Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 
   --radius: 20px;
   --radius-sm: 12px;
-  --shadow: 0 12px 32px rgba(15, 27, 61, 0.14);
-  --shadow-sm: 0 4px 14px rgba(15, 27, 61, 0.1);
+  --shadow: 0 12px 32px rgb(15 27 61 / 0.14);
+  --shadow-sm: 0 4px 14px rgb(15 27 61 / 0.1);
   --max: 1120px;
+}
+
+/* Dark "winter night" theme. Toggled by data-theme="dark" on <html>; the inline
+   script in index.html sets it before first paint so there is no light flash. */
+html[data-theme='dark'] {
+  color-scheme: dark;
+
+  --primary: #0a1122;
+  --primary-light: #0f1830;
+  --primary-lighter: #131d38;
+  --primary-dark: #33456b;
+  --secondary: #2f6bff;
+  --secondary-dark: #2559e0;
+  --secondary-darker: #9db9ff;
+  --ink: #e9eefc;
+  --ink-soft: #a9b6d6;
+  --white: #ffffff;
+  --danger: #ff9d94;
+
+  --field: #1a2643;
+  --solid: #23325a;
+  --solid-hover: #2c3f6e;
+  --icon-accent: #7ea6ff;
+  --ok: #2f6b3a;
+  --warn: #7a3b34;
+  --danger-bg: #3a1620;
+  --danger-border: #7a3230;
+  --hard-shadow: rgba(110, 150, 255, 0.28);
+  --overlay: rgba(3, 7, 18, 0.72);
+  --body-glow-a: rgba(63, 111, 255, 0.22);
+  --body-glow-b: rgba(126, 166, 255, 0.1);
+
+  --secondary-rgb: 91 140 255;
+  --ink-rgb: 233 238 252;
+  --white-rgb: 255 255 255;
+  --nav-rgb: 15 24 48;
+  --nav-border-rgb: 51 69 107;
+
+  --shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  --shadow-sm: 0 4px 14px rgba(0, 0, 0, 0.4);
 }
 
 *,
@@ -54,11 +115,15 @@ body {
   color: var(--ink);
   background-color: var(--primary);
   background-image:
-    radial-gradient(1200px 600px at 85% -10%, rgba(47, 107, 255, 0.16), transparent 60%),
-    radial-gradient(900px 500px at -10% 30%, rgba(255, 255, 255, 0.45), transparent 60%);
+    radial-gradient(1200px 600px at 85% -10%, var(--body-glow-a), transparent 60%),
+    radial-gradient(900px 500px at -10% 30%, var(--body-glow-b), transparent 60%);
   background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+  /* Soften the light/dark switch without animating on first paint. */
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
 }
 
 h1,
@@ -116,7 +181,7 @@ textarea {
   left: 16px;
   z-index: 200;
   padding: 10px 16px;
-  background: var(--ink);
+  background: var(--solid);
   color: var(--white);
   border-radius: 10px;
   transition: top 0.2s;
@@ -180,12 +245,23 @@ textarea {
   margin: 12px auto 0;
   width: calc(100% - 24px);
   max-width: var(--max);
-  background: rgba(247, 242, 232, 0.82);
+  background: rgb(var(--nav-rgb) / 0.82);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(191, 175, 146, 0.7);
+  border: 1px solid rgb(var(--nav-border-rgb) / 0.7);
   border-radius: 999px;
   box-shadow: var(--shadow-sm);
+  transition:
+    background 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
+}
+
+/* Once the page scrolls, the floating bar gets a stronger glass and shadow so
+   it stays legible over whatever passes underneath it. */
+.nav-scrolled {
+  background: rgb(var(--nav-rgb) / 0.94);
+  box-shadow: var(--shadow);
 }
 
 .brand {
@@ -197,7 +273,7 @@ textarea {
 }
 .brand-mark {
   display: inline-flex;
-  color: var(--secondary);
+  color: var(--icon-accent);
 }
 .brand-name {
   font-family: var(--font-display);
@@ -224,7 +300,7 @@ textarea {
   transition: background 0.2s;
 }
 .nav-link:hover {
-  background: rgba(47, 107, 255, 0.12);
+  background: rgb(var(--secondary-rgb) / 0.12);
 }
 
 .badge {
@@ -234,8 +310,37 @@ textarea {
   font-weight: 700;
   text-align: center;
   color: var(--white);
-  background: var(--secondary-darker);
+  background: var(--secondary);
   border-radius: 999px;
+}
+
+/* Light / dark switch in the navbar. */
+.theme-toggle {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  color: var(--ink);
+  background: rgb(var(--secondary-rgb) / 0.12);
+  border: 2px solid transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.18s ease;
+}
+.theme-toggle:hover {
+  background: rgb(var(--secondary-rgb) / 0.22);
+}
+.theme-toggle:active {
+  transform: scale(0.92);
+}
+.theme-toggle svg {
+  width: 20px;
+  height: 20px;
 }
 
 /* ---------- Buttons ---------- */
@@ -277,19 +382,19 @@ textarea {
 .btn-primary {
   color: var(--white);
   background: var(--secondary);
-  box-shadow: 0 8px 20px rgba(47, 107, 255, 0.35);
+  box-shadow: 0 8px 20px rgb(var(--secondary-rgb) / 0.35);
 }
 .btn-primary:hover:not(:disabled) {
   background: var(--secondary-dark);
-  box-shadow: 0 12px 26px rgba(47, 107, 255, 0.45);
+  box-shadow: 0 12px 26px rgb(var(--secondary-rgb) / 0.45);
 }
 
 .btn-secondary {
   color: var(--white);
-  background: var(--ink);
+  background: var(--solid);
 }
 .btn-secondary:hover:not(:disabled) {
-  background: #1a2a5c;
+  background: var(--solid-hover);
 }
 
 .btn-ghost {
@@ -298,7 +403,7 @@ textarea {
   border-color: var(--ink);
 }
 .btn-ghost:hover:not(:disabled) {
-  background: rgba(15, 27, 61, 0.08);
+  background: rgb(var(--ink-rgb) / 0.08);
 }
 
 .btn-light {
@@ -312,10 +417,10 @@ textarea {
 .btn-ghost-light {
   color: var(--white);
   background: transparent;
-  border-color: rgba(255, 255, 255, 0.75);
+  border-color: rgb(var(--white-rgb) / 0.75);
 }
 .btn-ghost-light:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.16);
+  background: rgb(var(--white-rgb) / 0.16);
 }
 
 .link-btn {
@@ -362,7 +467,7 @@ textarea {
   font-size: 0.9rem;
   font-weight: 700;
   color: var(--secondary-darker);
-  background: rgba(47, 107, 255, 0.12);
+  background: rgb(var(--secondary-rgb) / 0.12);
   border-radius: 999px;
 }
 
@@ -415,7 +520,7 @@ textarea {
   background: var(--primary-lighter);
   border: 2px solid var(--ink);
   border-radius: 28px;
-  box-shadow: 10px 12px 0 rgba(15, 27, 61, 0.92);
+  box-shadow: 10px 12px 0 var(--hard-shadow);
 }
 .mock-head {
   display: flex;
@@ -440,7 +545,7 @@ textarea {
   height: 46px;
   font-family: var(--font-display);
   font-weight: 800;
-  color: var(--secondary);
+  color: var(--icon-accent);
   background: var(--primary);
   border-radius: 50%;
 }
@@ -477,7 +582,7 @@ textarea {
   padding: 10px 16px;
   font-size: 0.9rem;
   font-weight: 700;
-  background: var(--white);
+  background: var(--field);
   border: 2px solid var(--ink);
   border-radius: 999px;
   box-shadow: var(--shadow-sm);
@@ -496,7 +601,7 @@ textarea {
 .marquee {
   overflow: hidden;
   padding: 16px 0;
-  color: var(--primary-lighter);
+  color: var(--white);
   background: var(--secondary);
   transform: rotate(-1.2deg);
   margin: 12px -20px 8px;
@@ -607,7 +712,7 @@ textarea {
   background: var(--primary-light);
   border: 2px solid var(--ink);
   border-radius: var(--radius);
-  box-shadow: 6px 7px 0 rgba(15, 27, 61, 0.9);
+  box-shadow: 6px 7px 0 var(--hard-shadow);
 }
 .game-card h3 {
   font-size: 1.3rem;
@@ -641,7 +746,7 @@ textarea {
   content: '❄';
   position: absolute;
   left: 0;
-  color: var(--secondary);
+  color: var(--icon-accent);
 }
 
 .cta-band {
@@ -678,7 +783,7 @@ textarea {
   background: var(--primary-lighter);
   border: 2px solid var(--ink);
   border-radius: 28px;
-  box-shadow: 8px 10px 0 rgba(15, 27, 61, 0.92);
+  box-shadow: 8px 10px 0 var(--hard-shadow);
 }
 .auth-icon {
   display: grid;
@@ -721,7 +826,7 @@ textarea {
 .tab-pill {
   position: absolute;
   inset: 0;
-  background: var(--white);
+  background: var(--field);
   border-radius: 999px;
   box-shadow: var(--shadow-sm);
 }
@@ -731,6 +836,13 @@ textarea {
 .tabs-small {
   max-width: 360px;
   margin-top: 0;
+}
+
+/* "Forgot password?" sits under the password field, right-aligned. */
+.auth-extra {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -6px;
 }
 
 .form {
@@ -762,7 +874,7 @@ input[type='email'],
 textarea {
   width: 100%;
   padding: 13px 16px;
-  background: var(--white);
+  background: var(--field);
   border: 2px solid var(--primary-dark);
   border-radius: var(--radius-sm);
   transition:
@@ -775,7 +887,7 @@ input[type='email']:focus,
 textarea:focus {
   outline: none;
   border-color: var(--secondary);
-  box-shadow: 0 0 0 4px rgba(47, 107, 255, 0.2);
+  box-shadow: 0 0 0 4px rgb(var(--secondary-rgb) / 0.2);
 }
 textarea {
   resize: vertical;
@@ -786,7 +898,7 @@ textarea {
   display: flex;
   align-items: center;
   padding-left: 16px;
-  background: var(--white);
+  background: var(--field);
   border: 2px solid var(--primary-dark);
   border-radius: var(--radius-sm);
   transition:
@@ -795,7 +907,7 @@ textarea {
 }
 .input-prefix:focus-within {
   border-color: var(--secondary);
-  box-shadow: 0 0 0 4px rgba(47, 107, 255, 0.2);
+  box-shadow: 0 0 0 4px rgb(var(--secondary-rgb) / 0.2);
 }
 .input-prefix span {
   font-weight: 700;
@@ -835,8 +947,8 @@ textarea {
   font-size: 0.95rem;
   font-weight: 500;
   color: var(--danger);
-  background: #fbe9e6;
-  border: 1px solid #e9b7b0;
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-border);
   border-radius: var(--radius-sm);
 }
 
@@ -857,7 +969,7 @@ textarea {
   background: var(--primary-lighter);
   border: 2px solid var(--ink);
   border-radius: 28px;
-  box-shadow: 8px 10px 0 rgba(15, 27, 61, 0.92);
+  box-shadow: 8px 10px 0 var(--hard-shadow);
 }
 .send-head {
   display: flex;
@@ -883,7 +995,7 @@ textarea {
   flex-shrink: 0;
   font-family: var(--font-display);
   font-weight: 800;
-  color: var(--secondary);
+  color: var(--icon-accent);
   background: var(--primary);
   border: 2px solid var(--ink);
   border-radius: 50%;
@@ -898,7 +1010,7 @@ textarea {
   margin: 0;
   padding: 10px 14px;
   font-size: 0.95rem;
-  background: rgba(47, 107, 255, 0.12);
+  background: rgb(var(--secondary-rgb) / 0.12);
   border-radius: var(--radius-sm);
 }
 
@@ -1023,7 +1135,7 @@ textarea {
   gap: 6px;
   padding: 6px 12px;
   font-size: 0.95rem;
-  background: var(--white);
+  background: var(--field);
   border: 2px solid var(--primary-dark);
   border-radius: 999px;
   cursor: pointer;
@@ -1032,7 +1144,7 @@ textarea {
   cursor: default;
 }
 .reaction-active {
-  background: rgba(47, 107, 255, 0.14);
+  background: rgb(var(--secondary-rgb) / 0.14);
   border-color: var(--secondary);
 }
 .reaction-count {
@@ -1111,10 +1223,10 @@ textarea {
 @keyframes pulse {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(47, 107, 255, 0.5);
+    box-shadow: 0 0 0 0 rgb(var(--secondary-rgb) / 0.5);
   }
   50% {
-    box-shadow: 0 0 0 7px rgba(47, 107, 255, 0);
+    box-shadow: 0 0 0 7px rgb(var(--secondary-rgb) / 0);
   }
 }
 .confession-prompt {
@@ -1133,7 +1245,7 @@ textarea {
 .confession-answer {
   margin-bottom: 12px;
   padding: 12px 14px;
-  background: rgba(47, 107, 255, 0.1);
+  background: rgb(var(--secondary-rgb) / 0.1);
   border-radius: var(--radius-sm);
 }
 .confession-answer p {
@@ -1149,7 +1261,7 @@ textarea {
   font-size: 0.78rem;
   font-weight: 700;
   color: var(--secondary-darker);
-  background: var(--white);
+  background: var(--field);
   border-radius: 999px;
 }
 /* A public reply gets a filled badge so its visibility is obvious at a glance. */
@@ -1190,7 +1302,7 @@ textarea {
   gap: 3px;
   padding: 12px 14px;
   text-align: left;
-  background: var(--white);
+  background: var(--field);
   border: 2px solid var(--primary-dark);
   border-radius: var(--radius-sm);
   cursor: pointer;
@@ -1203,9 +1315,9 @@ textarea {
   border-color: var(--ink);
 }
 .visibility-option-active {
-  background: rgba(47, 107, 255, 0.1);
+  background: rgb(var(--secondary-rgb) / 0.1);
   border-color: var(--secondary);
-  box-shadow: 0 0 0 3px rgba(47, 107, 255, 0.16);
+  box-shadow: 0 0 0 3px rgb(var(--secondary-rgb) / 0.16);
 }
 .visibility-option-active:hover {
   border-color: var(--secondary);
@@ -1234,7 +1346,7 @@ textarea {
 }
 .confirm {
   padding: 14px;
-  background: #fbe9e6;
+  background: var(--danger-bg);
   border-radius: var(--radius-sm);
 }
 .confirm p {
@@ -1284,7 +1396,7 @@ textarea {
   background: var(--primary-lighter);
   border: 2px solid var(--ink);
   border-radius: 28px;
-  box-shadow: 8px 10px 0 rgba(15, 27, 61, 0.92);
+  box-shadow: 8px 10px 0 var(--hard-shadow);
 }
 .empty-card h1,
 .empty-card h2 {
@@ -1311,7 +1423,7 @@ textarea {
   max-width: var(--max);
   margin: 0 auto;
   padding: 36px 20px 40px;
-  border-top: 2px solid rgba(15, 27, 61, 0.15);
+  border-top: 2px solid rgb(var(--ink-rgb) / 0.15);
 }
 .footer-inner {
   display: flex;
@@ -1419,7 +1531,7 @@ textarea {
   padding: 10px 12px;
   text-align: left;
   vertical-align: top;
-  border: 1px solid rgba(15, 27, 61, 0.18);
+  border: 1px solid rgb(var(--ink-rgb) / 0.18);
 }
 .legal-table th {
   font-weight: 700;
@@ -1428,7 +1540,7 @@ textarea {
 .legal-foot {
   margin-top: 34px;
   padding-top: 20px;
-  border-top: 2px solid rgba(15, 27, 61, 0.12);
+  border-top: 2px solid rgb(var(--ink-rgb) / 0.12);
 }
 
 /* ---------- Cookie consent ---------- */
@@ -1476,8 +1588,8 @@ textarea {
   justify-content: space-between;
   gap: 16px;
   padding: 14px 16px;
-  background: var(--white);
-  border: 1px solid rgba(15, 27, 61, 0.16);
+  background: var(--field);
+  border: 1px solid rgb(var(--ink-rgb) / 0.16);
   border-radius: var(--radius-sm);
 }
 .cookie-row-copy h3 {
@@ -1505,7 +1617,7 @@ textarea {
 }
 .cookie-tag-optional {
   color: var(--secondary-darker);
-  background: rgba(47, 107, 255, 0.16);
+  background: rgb(var(--secondary-rgb) / 0.16);
 }
 
 .switch {
@@ -1585,8 +1697,8 @@ textarea {
   gap: 10px;
   padding: 10px 14px;
   font-size: 0.95rem;
-  background: var(--white);
-  border: 2px solid rgba(15, 27, 61, 0.16);
+  background: var(--field);
+  border: 2px solid rgb(var(--ink-rgb) / 0.16);
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
@@ -1610,7 +1722,7 @@ textarea {
   padding: 12px 14px;
   font: inherit;
   color: var(--ink);
-  background: var(--white);
+  background: var(--field);
   border: 2px solid var(--ink);
   border-radius: var(--radius-sm);
   resize: vertical;
@@ -1643,7 +1755,7 @@ textarea {
   padding: 12px 18px;
   font-weight: 500;
   color: var(--white);
-  background: var(--ink);
+  background: var(--solid);
   border-radius: 16px;
   box-shadow: var(--shadow);
   pointer-events: auto;
@@ -1660,10 +1772,10 @@ textarea {
   border-radius: 50%;
 }
 .toast-success .toast-icon {
-  background: #9fd9a6;
+  background: var(--ok);
 }
 .toast-error .toast-icon {
-  background: #f5a59c;
+  background: var(--warn);
 }
 
 /* ---------- Share: QR codes and story cards ---------- */
@@ -1675,7 +1787,7 @@ textarea {
   display: grid;
   place-items: center;
   padding: 20px;
-  background: rgba(15, 27, 61, 0.55);
+  background: var(--overlay);
   backdrop-filter: blur(4px);
 }
 .modal-panel {
@@ -1778,8 +1890,19 @@ textarea {
   .brand-name {
     font-size: 1.02rem;
   }
+  /* On phones the floating pill becomes a flush app bar: it sticks to the top
+     edge with rounded bottom corners, so content never peeks through the gap
+     above a floating pill while scrolling. */
   .nav {
-    padding: 10px 14px;
+    margin-top: 0;
+    width: 100%;
+    max-width: 100%;
+    padding: 10px 16px;
+    border-top: 0;
+    border-right: 0;
+    border-left: 0;
+    border-radius: 0 0 22px 22px;
+    background: rgb(var(--nav-rgb) / 0.94);
   }
   .btn {
     padding: 11px 18px;
@@ -1803,6 +1926,15 @@ textarea {
   }
   .nav-actions {
     gap: 4px;
+  }
+  /* Keep the row from wrapping on the narrowest phones. */
+  .nav .btn {
+    padding: 9px 14px;
+    font-size: 0.95rem;
+  }
+  .theme-toggle {
+    width: 36px;
+    height: 36px;
   }
 }
 

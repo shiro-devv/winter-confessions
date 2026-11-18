@@ -255,6 +255,11 @@ This is how the project was built, in order.
   pages: Landing, Auth, Send, Inbox, and NotFound.
 - Wrote the snow canvas by hand: 45 to 150 flakes based on screen size, gentle sway, white flakes
   with a faint blue rim so they stay visible on sand, and smaller blue flakes for depth.
+- Ships two themes: the warm sand "light" and a "winter night" dark, toggled from the navbar. The
+  choice is saved in `wc:theme`; without a choice it follows the operating system. An inline script
+  in `index.html` applies it before first paint so dark-mode visitors never see a light flash.
+- The sticky navbar floats as a rounded pill on desktop and becomes a flush, rounded-bottom app bar
+  on phones, gaining a stronger shadow once the page scrolls.
 
 ### 6. Verification
 Every step below was run, not assumed:
@@ -275,8 +280,8 @@ Every step below was run, not assumed:
 - **Cookie consent** is strict opt-in: a banner asks first, and a settings dialog (footer →
   "Cookie settings") lets people change their mind. The only optional category is analytics.
 - **Only strictly necessary storage runs without consent**: the Supabase session
-  (`sb-<project-ref>-auth-token`) and one anonymous anti-spam id (`wc:visitor`). The consent
-  choice itself is kept in `wc:consent`.
+  (`sb-<project-ref>-auth-token`), one anonymous anti-spam id (`wc:visitor`), and the theme
+  preference (`wc:theme`). The consent choice itself is kept in `wc:consent`.
 - **Analytics** (GoatCounter) is cookieless and only loads after opt-in. With no
   `VITE_GOATCOUNTER_CODE`, nothing loads at all.
 - The wording lives in `src/lib/legal.ts` and the pages under `src/pages`. Keep them in sync with
@@ -288,7 +293,9 @@ Every step below was run, not assumed:
   `securityMeta` plugin in `vite.config.ts`. It is a `<meta http-equiv>` tag because GitHub Pages
   cannot send custom response headers. It locks scripts to `'self'` (plus `gc.zgo.at` for the
   optional analytics), connects only to `'self'` and the Supabase project, and blocks objects and
-  frames. Note that `frame-ancestors` and `report-uri` cannot be set from a meta tag.
+  frames. The one inline script (the pre-paint theme setter in `index.html`) is allowed by SHA-256
+  hash, which `securityMeta` computes at build time. Note that `frame-ancestors` and `report-uri`
+  cannot be set from a meta tag.
 - **Referrer policy** — `strict-origin-when-cross-origin`.
 - **Vulnerability disclosure** — `public/.well-known/security.txt` and `SECURITY.md`.
 - **Auth forms** use correct `autocomplete` hints, and external links use
@@ -299,6 +306,8 @@ Every step below was run, not assumed:
 - Senders are never shown to the recipient. The only sender data stored is a random per-browser
   id used for rate limiting and to stop duplicate reactions.
 - Passwords are salted and hashed, never stored as typed.
+- Password reset uses a single-use recovery link. Setting a new password also signs out every other
+  session, so someone who knew the old password loses access.
 - All text is rendered by React, which escapes it, so confessions cannot inject HTML.
 - Redirect targets after login are checked so they can only point inside the app.
 
@@ -310,7 +319,10 @@ Every step below was run, not assumed:
 - Sending and reporting are rate-limited on the server (3 confessions per minute, 5 reports per
   hour), but the anonymous id that backs those limits lives in the browser, so it is a speed bump
   rather than a hard block.
-- There is no password reset flow yet beyond Supabase's confirmation email.
+- Password reset works through Supabase's recovery email. "Forgot password?" on the login form sends
+  the link, and `/reset-password` lets the person set a new password and signs out their other
+  sessions. It still relies on Supabase's rate-limited built-in mailer unless you configure custom
+  SMTP.
 - Google Fonts (Fraunces and DM Sans) load from the network, which shares your visitors' IP
   addresses with Google. This is disclosed in the Privacy Policy; self-hosting the fonts would
   remove that third party. Without the fonts, the app falls back to Georgia and system fonts.
@@ -319,7 +331,6 @@ Every step below was run, not assumed:
 
 ## Ideas for next steps
 
-- Email or social sign-in and password reset
+- Email or social sign-in
 - An admin view for reports (and blocking abusive senders)
 - Share-as-image cards for stories
-- Dark "midnight" theme using the same two brand colors

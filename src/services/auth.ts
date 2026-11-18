@@ -48,7 +48,7 @@ function authError(error: AuthError): AppError {
   ) {
     return new AppError(
       'rate_limited',
-      'Too many confirmation emails have been sent. Wait about an hour, then try again.',
+      'Too many emails have been sent from here. Wait about an hour, then try again.',
     );
   }
   if (error.code === 'invalid_credentials') {
@@ -62,6 +62,12 @@ function authError(error: AuthError): AppError {
   }
   if (error.code === 'weak_password') {
     return new AppError('validation', error.message);
+  }
+  if (error.code === 'same_password') {
+    return new AppError('validation', 'That is already your password. Choose a different one.');
+  }
+  if (error.code === 'otp_expired' || error.code === 'invalid_grant') {
+    return new AppError('unauthorized', 'That link has expired. Request a new password reset email.');
   }
   if (error.code === 'signup_disabled') {
     return new AppError('forbidden', 'New accounts are turned off right now. Please try again later.');
@@ -191,6 +197,36 @@ export async function logIn(email: string, password: string): Promise<Profile> {
 export async function logOut(): Promise<void> {
   const { error } = await supabase.auth.signOut();
   if (error) throw new AppError('storage', 'We could not log you out. Please try again.');
+}
+
+/**
+ * Emails a password-reset link. The link signs the person in with a short-lived
+ * recovery session and lands them on /reset-password.
+ *
+ * Supabase deliberately reports success even when no account matches the
+ * address, so this never reveals whether an email is registered.
+ */
+export async function requestPasswordReset(email: string): Promise<void> {
+  const emailError = validateEmail(email);
+  if (emailError) throw new AppError('validation', emailError);
+
+  const { error } = await supabase.auth.resetPasswordForEmail(normalizeEmail(email), {
+    redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}reset-password`,
+  });
+  if (error) throw authError(error);
+}
+
+/** Sets a new password for the person with the current recovery session. */
+export async function updatePassword(password: string): Promise<void> {
+  const passwordError = validatePassword(password);
+  if (passwordError) throw new AppError('validation', passwordError);
+
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) throw authError(error);
+
+  // If the account was compromised, signing out every other session stops the
+  // person who had the old password from staying logged in elsewhere.
+  await supabase.auth.signOut({ scope: 'others' });
 }
 
 export async function updateProfile(
