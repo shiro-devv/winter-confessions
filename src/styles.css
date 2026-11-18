@@ -4,15 +4,24 @@
    ========================================================================== */
 
 :root {
+  /* This is a light-only design. Declaring it stops mobile browsers from
+     auto-darkening the sand background, which otherwise left the fixed dark
+     and cream text sitting on a dark backdrop with poor contrast. */
+  color-scheme: light;
+  color-scheme: only light;
+
   --primary: #d8cbb3;
   --primary-light: #efe7d6;
   --primary-lighter: #f7f2e8;
   --primary-dark: #bfaf92;
   --secondary: #2f6bff;
   --secondary-dark: #2459e0;
-  --secondary-darker: #1b47b8;
+  /* Darkened from #1b47b8 so links and blue accents clear AA on the sand and
+     tinted backgrounds they are used on. */
+  --secondary-darker: #16389a;
   --ink: #0f1b3d;
-  --ink-soft: #3b4a73;
+  /* Darkened from #3b4a73 so muted copy stays readable on sand and cards. */
+  --ink-soft: #33406b;
   --white: #ffffff;
   --danger: #a3261f;
 
@@ -370,7 +379,9 @@ textarea {
   white-space: nowrap;
 }
 .hero-word-accent {
-  color: var(--secondary);
+  /* --secondary (#2f6bff) only reached ~2.8:1 on the sand background, so the
+     accent uses the darker blue instead. */
+  color: var(--secondary-darker);
   font-style: italic;
 }
 .hero-letter {
@@ -421,7 +432,6 @@ textarea {
 }
 .mock-head span:not(.mock-avatar) {
   font-size: 0.9rem;
-  opacity: 0.95;
 }
 .mock-avatar {
   display: grid;
@@ -640,7 +650,8 @@ textarea {
   margin: 72px auto 0;
   padding: clamp(36px, 7vw, 72px) 24px;
   text-align: center;
-  color: var(--primary-lighter);
+  /* White rather than cream: cream only reached ~4:1 on the blue at body size. */
+  color: var(--white);
   background: var(--secondary);
   border-radius: 32px;
   box-shadow: var(--shadow);
@@ -864,10 +875,6 @@ textarea {
 .send-head p {
   margin: 0;
   font-size: 0.95rem;
-  opacity: 0.95;
-}
-.send-bio {
-  opacity: 0.9;
 }
 
 .avatar {
