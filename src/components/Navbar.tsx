@@ -16,8 +16,20 @@ export function Navbar() {
   const navigate = useNavigate();
   const [unread, setUnread] = useState(0);
   const [scrolled, setScrolled] = useState(false);
+  // The bar slides in from the edge it is attached to: top on desktop, bottom
+  // on phones where it becomes a fixed app bar.
+  const [isPhone, setIsPhone] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(max-width: 680px)').matches,
+  );
 
   const userId = user?.id ?? null;
+
+  useEffect(() => {
+    const query = window.matchMedia('(max-width: 680px)');
+    const onChange = () => setIsPhone(query.matches);
+    query.addEventListener('change', onChange);
+    return () => query.removeEventListener('change', onChange);
+  }, []);
 
   // Give the sticky bar a stronger shadow once the page has moved.
   useEffect(() => {
@@ -75,7 +87,7 @@ export function Navbar() {
   return (
     <motion.header
       className={`nav ${scrolled ? 'nav-scrolled' : ''}`}
-      initial={{ y: -64, opacity: 0 }}
+      initial={{ y: isPhone ? 80 : -64, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
     >

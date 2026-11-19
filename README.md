@@ -198,7 +198,7 @@ confessions 0..1 ──< reports
 | --- | --- |
 | Whole app | Snow falling at a constant 2.5 degree angle, extra flurry when a confession is sent |
 | Route changes | Fade and slide in and out (`AnimatePresence`) |
-| Navbar | Slides down on load, slowly rotating snowflake logo, unread badge |
+| Navbar | Slides in from its attached edge on load, slowly rotating snowflake logo, unread badge |
 | Hero | Letter-by-letter spring title, staggered subtitle and buttons |
 | Hero card | Entrance tilt, rotating sample confessions, floating bubbles, hover straighten |
 | Marquee | Endless scroll, pauses on hover |
@@ -259,8 +259,10 @@ This is how the project was built, in order.
 - Ships two themes: the warm sand "light" and a "winter night" dark, toggled from the navbar. The
   choice is saved in `wc:theme`; without a choice it follows the operating system. An inline script
   in `index.html` applies it before first paint so dark-mode visitors never see a light flash.
-- The sticky navbar floats as a rounded pill on desktop and becomes a flush, rounded-bottom app bar
-  on phones, gaining a stronger shadow once the page scrolls.
+- The navbar floats as a rounded pill stuck to the top on desktop, and becomes a fixed bottom app bar
+  on phones (rounded top corners, full width), gaining a stronger shadow once the page scrolls. The
+  wordmark is dropped and the actions tightened on small screens so nothing runs off the edge; the
+  shell and the cookie banner/toasts are offset so they never sit under the bar.
 
 ### 6. Verification
 Every step below was run, not assumed:
